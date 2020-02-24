@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<% function timeSince(o){var t=Math.floor((new Date-o)/1e3),r=Math.floor(t/31536e3);return r>1?r+" years":(r=Math.floor(t/2592e3))>1?r+" months":(r=Math.floor(t/86400))>1?r+" days":(r=Math.floor(t/3600))>1?r+" hours":(r=Math.floor(t/60))>1?r+" minutes":Math.floor(t)+" seconds"}%>
+<html>
+  <%- include('../head') -%>
+  <body>
+  <%- include('../navbar')	-%>
+  <br>
+ 
+  <div id="mainPage">
+    <%- include('../sidebar') -%>
+    <div class="column col-xs-12 col-sm-9 col-lg-10" style="margin:auto" id="main">
+        <form action="/api/v1/notifications/markAsRead" class="float-right" method="post">
+            <button type="submit" class="btn btn-sm btn-success"> Mark as read </button>
+        </form>  <br><br><br>   
+        <% if(activity.length==0) { %>
+            
+        <center><i class="fa fa-bell"></i> No new notifications, right now!</center>
+            <% } %>
+        <ul class="list-group">
+            <% for(var i=0;i<activity.length;i++) { %>
+                <li class="list-group-item"><%= activity[i].msg %> - <b><%= timeSince(new Date(activity[i].time)) %> ago</b><br></li>
+            <% } %>    
+        </ul>
+    </div>
+  </div>
+  
+  <%- include('../tabs') -%>
+  <%- include('../footer') -%>  
+  </body>
+  <script>
+    var activeItem = document.getElementById("notifications");
+    activeItem.style.backgroundColor = "rgba(233,235,238,0.25)";
+  </script>
+</html>

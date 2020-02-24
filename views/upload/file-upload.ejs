@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+  <%- include('../head') -%>
+  <link rel="stylesheet" type="text/css" href="/stylesheets/moment.css">
+  <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://js.api.here.com/v3/3.1/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+  <body>
+    <%- include('../navbar') -%>
+    <br>
+    <div id="mainPage">
+      <%- include('../sidebar') -%>
+      <div class="column col-xs-12 col-sm-9 col-lg-10" id="main" style="margin: auto;">
+        <div class="form-container">
+          <form action="/me/upload" method="post" enctype="multipart/form-data">
+            <div class="gram-card">
+              <div class="gram-card-header">
+                <img src="/images/logo/logo.png" class="gram-card-user-image">
+                <a class="gram-card-user-name" href="/u/"><%= user %></a>
+              </div>
+              <br>
+
+              <div class="gram-card-content">
+                <p>EPICENTER/LOCATION<small> (longpress location to set marker on map)</small></p>
+                <p>
+                  <input type="text" class="form-control" id="queryBox" name="location" placeholder="enter_event_location" onkeyup="autoCompleteListener(this)" required>
+                  <input type="hidden" name="latitude" id="latitude" value="" class="form-control">
+                  <input type="hidden" name="longitude" id="longitude" value="" class="form-control">
+                </p>
+                <p id="panel"></p>
+                <p>EVENT RADIUS IN KM: <small id="rangeVal"></small></p>
+                <p>
+                  <input class="form-control" type="range" name="range" min="1" max="5" step="0.01" id="range" value="2.25" onchange="onRangeChange()" />
+                </p>
+                <p>TIME</p>
+                <p>
+                  <input class="form-control" type="datetime-local" name="time"/>
+                </p>
+                <div id="map"></div>
+              </div>
+
+              <div class="gram-card-image">
+                <center>
+                  <div class="upload-btn-wrapper">
+                  <button class="btn agradient btn-action whoop" id="post"><i class="fa fa-lg fa-upload"></i> Upload an image
+                  </button>
+                  <input type='file' name='filetoupload' onchange="readURL(this);" id="file" multiple/>
+                  </div>
+                  <img src="" id="blah" class="img-responsive">
+                </center>
+              </div>
+              <div class="gram-card-content">
+                <p>EVENT DESCRIPTION</p>
+                <p>
+                  <input type="text" name="caption" placeholder="event_description" class="form-control" required>
+                </p>
+                <p>EVENT TYPE</p>
+                <p>
+                  <select class="form-control" name="type">
+                    <option value="explosion">Explosion 💣</option>
+                    <option value="accident" selected>Accident 💥</option>
+                    <option value="fire">Fire 🧯</option>
+                    <option value="natural">Natural 🌋</option>
+                    <option value="curfew">Angry mob 🗣</option>
+                    <option value="other">Other 🚑</option>
+                  </select>
+                </p>
+                <p><small>Generate a chatroom?</small> <input type="radio" name="chatroom" value="true"> Yes <input type="radio" name="chatroom" value="false" checked> No
+                </p>
+              </div>
+              <div class="gram-card-footer">
+                <center>
+                  <button class="footer-action-icons btn btn-primary"><i class="glyphicon glyphicon-file-invoice"></i> Post</button>
+                </center>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div id="notify_message" class=" notify_message-success">
+      <center>You are now a part of auxilium!</center>
+    </div>
+  <%- include('../tabs') -%>
+  <%- include('../footer') -%>
+  </body>
+  <script type="text/javascript">
+    show_notification('Upload something here!','success')
+  </script>
+  <script type="text/javascript">
+       function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                  console.log(e);
+                  var typeRegex = e.target.result.match(RegExp("data:video*"));
+                  if(typeRegex) {
+                    console.log("video");
+                    // TODO: Add a video preview for the user
+                  }
+                  $('#blah').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+</script>
+<script>
+  var activeItem = document.getElementById("upload");
+  activeItem.style.backgroundColor = "rgba(233,235,238,0.25)";
+</script>
+<!-- Create Map -->
+<script>
+  var platform = new H.service.Platform({
+    apikey: "z6rVlgCg62beX3jcCuVxjsJFgLi-8DnC_kWqdztPU2w"
+  });
+
+  var defaultLayers = platform.createDefaultLayers();
+  var mapContainer = document.getElementById("map");
+  // Instantiate a map object
+
+  // center should be current latitude and longitude
+  var map = new H.Map(mapContainer, defaultLayers.raster.normal.map, {
+    zoom: 14,
+    center: {
+      lat: 19.08358,
+      lng: 72.910697
+      },
+    pixelRatio: window.devicePixelRatio || 1
+  });
+  var mapEvent = new H.mapevents.MapEvents(map);
+  var mapBehaviour = new H.mapevents.Behavior(mapEvent);
+</script>
+<!-- Create Map End -->
+<!-- Event Complete -->
+<script>
+  var AUTOCOMPLETION_URL = "https://autocomplete.geocoder.ls.hereapi.com/6.2/suggest.json",
+  ajaxRequest = new XMLHttpRequest(),
+  query = "";
+
+  function autoCompleteListener(queryBox, event) {
+    if (query != queryBox.value) {
+      if (queryBox.value.length >= 1) {
+        var params = `?query=${encodeURIComponent(queryBox.value)}&beginHighlight=${encodeURIComponent(
+          "<mark>"
+        )}&endHighlight=${encodeURIComponent("</mark>")}&maxresults=5&apikey=z6rVlgCg62beX3jcCuVxjsJFgLi-8DnC_kWqdztPU2w`;
+        ajaxRequest.open("GET", AUTOCOMPLETION_URL + params);
+        ajaxRequest.send();
+      }
+    }
+    query = queryBox.value;
+  }
+
+  function onAutoCompleteSuccess() {
+    clearOldSuggestions();
+    addSuggestionsToPanel(this.response);
+    addSuggestionsToMap(this.response);
+  }
+
+  function onAutoCompleteFailed() {
+    alert("Ooops! Look's like some error was encountered while processing.");
+  }
+
+  ajaxRequest.addEventListener("load", onAutoCompleteSuccess);
+  ajaxRequest.addEventListener("error", onAutoCompleteFailed);
+  ajaxRequest.responseType = "json";
+
+  var suggestionsContainer = document.getElementById("panel");
+  var geocoder = platform.getGeocodingService();
+  var group = new H.map.Group();
+
+  group.addEventListener(
+    "tap",
+    function(evt) {
+      map.setCenter(evt.target.getGeometry());
+      openBubble(evt.target.getGeometry(), evt.target.getData());
+    },
+    false
+  );
+
+  map.addObject(group);
+
+  // Create the default UI components
+  var ui = H.ui.UI.createDefault(map, defaultLayers);
+
+  // Hold a reference to any info-bubble opened
+  var bubble;
+
+  /**
+   * Function to Open/Close an infobubble on the map.
+   * @param  {H.geo.Point} position     The location on the map.
+   * @param  {String} text              The contents of the infobubble.
+   */
+  function openBubble(position, text) {
+    if (!bubble) {
+      bubble = new H.ui.InfoBubble(
+        position,
+        // ? The FO property holds the province name.
+        { content: "<small>" + text + "</small>" }
+      );
+      ui.addBubble(bubble);
+    } else {
+      bubble.setPosition(position);
+      bubble.setContent("<small>" + text + "</small>");
+      bubble.open();
+    }
+  }
+
+  function addSuggestionsToMap(response) {
+    /**
+     * This function will be called once the Geocoder REST API provides a response
+     * @param  {Object} result          A JSONP object representing the  location(s) found.
+     */
+    var onGeocodeSuccess = function(result) {
+        var marker,
+          locations = result.Response.View[0].Result,
+          i;
+
+        // Add a marker for each location found
+        for (i = 0; i < locations.length; i++) {
+          marker = new H.map.Marker({
+            lat: locations[i].Location.DisplayPosition.Latitude,
+            lng: locations[i].Location.DisplayPosition.Longitude
+          });
+          marker.setData(locations[i].Location.Address.Label);
+          group.addObject(marker);
+        }
+
+        map.getViewModel().setLookAtData({
+          bounds: group.getBoundingBox()
+        });
+        if (group.getObjects().length < 2) {
+          map.setZoom(15);
+        }
+      },
+      /**
+       * This function will be called if a communication error occurs during the JSON-P request
+       * @param  {Object} error  The error message received.
+       */
+      onGeocodeError = function(error) {
+        alert("Ooops!");
+      },
+      /**
+       * This function uses the geocoder service to calculate and display information
+       * about a location based on its unique `locationId`.
+       *
+       * A full list of available request parameters can be found in the Geocoder API documentation.
+       * see: http://developer.here.com/rest-apis/documentation/geocoder/topics/resource-search.html
+       *
+       * @param {string} locationId    The id assigned to a given location
+       */
+      geocodeByLocationId = function(locationId) {
+        geocodingParameters = {
+          locationId: locationId
+        };
+
+        geocoder.geocode(geocodingParameters, onGeocodeSuccess, onGeocodeError);
+      };
+
+    /*
+    * Loop through all the geocoding suggestions and make a request to the geocoder service
+    * to find out more information about them.
+    */
+
+    response.suggestions.forEach(function(item, index, array) {
+      geocodeByLocationId(item.locationId);
+    });
+  }
+
+  /**
+   * Removes all H.map.Marker points from the map and adds closes the info bubble
+   */
+  function clearOldSuggestions() {
+    group.removeAll();
+    if (bubble) {
+      bubble.close();
+    }
+  }
+
+  /**
+   * Format the geocoding autocompletion repsonse object's data for display
+   *
+   * @param {Object} response
+   */
+  function addSuggestionsToPanel(response) {
+    var suggestions = document.getElementById("suggestions");
+    // suggestions.innerHTML = JSON.stringify(response, null, " ");
+    suggestions.innerHTML = "<ul>";
+    response.suggestions.forEach(result => {
+      suggestions.innerHTML += `<li style="list-style-type: none;"><a href="#" id="${result.locationId}" onclick="setCenter(this.id)">${result.label}</a></li>`;
+    });
+    suggestions.innerHTML += "</ul>";
+  }
+
+  var content = ''; //'<strong style="font-size: large;">' + "Suggestions" + "</strong></br>"
+
+  // content += "<br/><strong>Suggestions:</strong><br/>";
+  content += '<div style="margin-left:5%; margin-right:5%;" id="suggestions"></div>';
+
+  suggestionsContainer.innerHTML = content;
+
+  function setCenter(locationId) {
+    geocoder.geocode(
+      {
+        locationId: locationId
+      },
+      function(result) {
+        clearOldSuggestions();
+        document.getElementById("panel").innerHTML = "";
+        document.getElementById("queryBox").value = result.Response.View[0].Result[0].Location.Address.Label;
+        let latitude = result.Response.View[0].Result[0].Location.DisplayPosition.Latitude;
+        let longitude = result.Response.View[0].Result[0].Location.DisplayPosition.Longitude;
+        document.getElementById("latitude").value = latitude;
+        document.getElementById("longitude").value = longitude;
+        let marker = new H.map.Marker({
+          lat: latitude,
+          lng: longitude
+        });
+
+        marker.setData(result.Response.View[0].Result[0].Location.Address.Label);
+        group.addObject(marker);
+      },
+      function(error) {
+        alert("Oops! Looks like we encountered some error while processing.");
+      }
+    );
+  }
+
+  function setUpClickListener(map) {
+  // Attach an event listener to map display
+  // obtain the coordinates and display in an alert box.
+  map.addEventListener('longpress', function (evt) {
+    clearOldSuggestions();
+    let coord = map.screenToGeo(evt.currentPointer.viewportX,
+            evt.currentPointer.viewportY);
+    let params = {
+      prox: coord.lat + "," + coord.lng + ",150",
+      mode: 'retrieveAddresses',
+      maxresults: '1',
+      jsonattributes : 1
+    }
+    let address;
+    geocoder.reverseGeocode( params, function(result){
+      address = (result.response.view[0].result)[0].location.address.label;
+      document.getElementById("latitude").value = coord.lat;
+      document.getElementById("longitude").value = coord.lng;
+      document.getElementById("queryBox").value = address;
+      document.getElementById("panel").innerHTML = address;
+
+      let newMarker = new H.map.Marker({
+        lat: coord.lat,
+        lng: coord.lng
+      })
+      newMarker.setData(address);
+      group.addObject(newMarker);
+    }, function(error) {
+      alert('Can\'t reach the remote server');
+    });
+  });
+}
+
+  setUpClickListener(map);
+</script>
+<!-- Event Complete End -->
+<script type="text/javascript">
+  document.getElementById("rangeVal").innerHTML = document.getElementById("range").value;
+  function onRangeChange() {
+    document.getElementById("rangeVal").innerHTML = document.getElementById("range").value;
+  }
+</script>
+</html>

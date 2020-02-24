@@ -1,0 +1,26 @@
+<html>
+    <body style="margin: 0">
+        <div id="map" style="width: 100vw; height: 100vh"></div>
+        <script src="https://js.api.here.com/v3/3.0/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script src="https://stuk.github.io/jszip/dist/jszip.js" type="text/javascript" charset="utf-8"></script>
+        <script src="heremap.js"></script>
+        <script>
+			 const start = async () => {
+			        const map = new HereMap(/*"qUfxIATIF50WDQKwtDu5","w2TTN8KjTMVLlRoWJap6ctLRnumXpD3iYwPa1urOuCQ",*/ document.getElementById("map"));
+			        const lineString = new H.geo.LineString();
+			        lineString.pushPoint({ lat: 72/*lt - 0.2*/, lng: 19/*lg - 0.2*/ });
+			        lineString.pushPoint({ lat: 72.8/*lt - 0.2*/, lng: 19.2/*lg + 0.2*/ });
+			        lineString.pushPoint({ lat: 72.8/*lt + 0.2*/, lng: 19.2/*lg - 0.2*/ });
+			        lineString.pushPoint({ lat: 72/*lt + 0.2*/, lng: 19/*lt + 0.2*/ });
+			        const polygon = new H.map.Polygon(lineString);
+			        console.log(map.polygonToWKT(polygon));
+			        map.draw(polygon);
+			        const geofenceResponse = await map.uploadGeofence("1234", "Nic Secret Layer", map.polygonToWKT(polygon));
+			    };
+			    start();
+        </script>
+    </body>
+</html>

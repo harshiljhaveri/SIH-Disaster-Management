@@ -1,0 +1,99 @@
+{
+  "name": "auxilium",
+  "version": "1.0.0",
+  "update": false,
+  "scripts": {
+    "start": "node update.js; node ./bin/www",
+    "test": "mocha",
+    "app": "node update.js; node ./bin/www --app",
+    "startdev": "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "apikeygen": "^1.1.0",
+    "array-tools": "1.8.6",
+    "bcrypt-nodejs": "0.0.3",
+    "chai": "^4.2.0",
+    "cookie-parser": "^1.4.4",
+    "debug": "~2.6.9",
+    "ejs": "^2.5.9",
+    "express": "~4.16.0",
+    "express-session": "^1.17.0",
+    "file-extension": "^4.0.5",
+    "file-system": "^2.2.2",
+    "formidable": "^1.2.1",
+    "googleapis": "^39.2.0",
+    "guid": "0.0.12",
+    "http-errors": "~1.6.2",
+    "lodash": "^4.17.15",
+    "mocha": "^6.2.2",
+    "mongoose": "^5.7.9",
+    "morgan": "~1.9.0",
+    "multer": "^1.4.2",
+    "mv": "2.1.1",
+    "newsapi": "^2.4.0",
+    "opencollective-postinstall": "^2.0.2",
+    "passport": "^0.4.0",
+    "passport-google-oauth": "^2.0.0",
+    "prompts": "^2.2.1",
+    "pusher": "^3.0.0",
+    "request": "2.88.0",
+    "socket.io": "^2.3.0",
+    "time-ago": "0.2.1",
+    "usage": "^0.7.1",
+    "web-push": "^3.4.3"
+  },
+  "description": "A powerful disaster management app in Node.js",
+  "main": "./bin/www",
+  "keywords": [
+    "social",
+    "disaster",
+    "sos",
+    "danger",
+    "accident",
+    "help",
+    "safety",
+    "nodejs",
+    "express",
+    "mongodb",
+    "mongoose",
+    "platform"
+  ],
+  "build": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "AlQaholic007",
+        "repo": "auxilium"
+      }
+    ],
+    "appId": "com.alqaholic007.desktop.auxilium",
+    "copyright": "Soham Parekh 2019",
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "publish": "github",
+      "category": "public.app-category.social-networking"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "publish": "github",
+      "publisherName": "AlQaholic007"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "zip",
+        "deb"
+      ],
+      "publish": "github",
+      "maintainer": "AlQaholic007 <mail@sohamp.dev>"
+    }
+  },
+  "author": "AlQaholic007 <mail@sohamp.dev>",
+  "license": "MIT"
+}

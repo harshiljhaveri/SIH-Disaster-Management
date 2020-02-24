@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <%- include('../head') -%>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/moment.css">
+    <link type="text/css" rel="stylesheet" media="screen" href="/animations/jquery-sakura.min.css" />
+  <body>
+  <%- include('../navbar')	-%>
+    <br>
+    <div id="mainPage">
+      <%- include('../sidebar') -%>
+      <div class="column col-xs-12 col-sm-9 col-lg-10" style="margin:auto" id="main">
+        <ul class="list-group">
+          <li class="list-group-item active"><strong>Talk to someone</strong></li>
+          <% for(var i=0;i<users.length;i++) { %>
+            <li class="list-group-item">
+              <img class="logo" src="<%= users[i].profile_pic %>" alt="">
+              <a href="/chat/<%= users[i]._id %>" style="color:black;"><%= users[i].username %></a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+    <%- include('../tabs') %>
+  </body>
+  <script>
+    var activeItem = document.getElementById("chat");
+    activeItem.style.backgroundColor = "rgba(233,235,238,0.25)";
+  </script>
+  
+</html>

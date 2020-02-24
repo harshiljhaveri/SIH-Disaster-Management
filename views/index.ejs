@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <%- include('head') -%>
+
+<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+<link rel="stylesheet" type="text/css" href="/stylesheets/moment.css">
+<link type="text/css" rel="stylesheet" media="screen" href="/animations/jquery-sakura.min.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/ns-default.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/ns-style-other.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/progressive-image.css" />
+<!-- Here Maps JS files -->
+<script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+<script src="http://js.api.here.com/v3/3.1/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="https://js.api.here.com/v3/3.1/mapsjs-clustering.js"></script>
+<!-- Here Maps JS files import ends -->
+<script src="javascripts/modernizr.custom.js"></script>
+<script src="javascripts/progressive-image.js"></script>
+  <body>
+  <%- include('navbar')	-%>
+  <div id="mainPage">
+    <%- include('sidebar') -%>
+    <%- include('main') -%>
+  </div>
+  <%- include('tabs') -%>
+  <%- include('footer') -%>
+  <div id="notify_message" class="notify_message-success">
+
+  </div>
+
+  </body>
+
+<!-- End of your HTML body -->
+<script src="/animations/jquery-sakura.min.js"></script>
+<script src="javascripts/classie.js"></script>
+<script src="javascripts/notificationFx.js"></script>
+  <script type="text/javascript">
+    $(function() {
+        $.ajax({
+          method:"GET",
+          url:"/api/v1/notifications"
+        }).done(function(data) {
+          if(data != 0) {
+            show_new_notification({msg:`You have ${data} new notification(s).`}, 'notice');
+          }           
+        })
+      });
+  </script>
+  <script type="text/javascript" src="/javascripts/like.js"></script>
+  <script type="text/javascript" src="/javascripts/comment.js"></script>
+  <script type="text/javascript" src="/javascripts/socket.io.js"></script>
+  <script type="text/javascript" src="/javascripts/connect.js"></script>
+   <script>
+    var activeItem = document.getElementById("dashboard");
+    activeItem.style.backgroundColor = "rgba(233,235,238,0.25)";
+  </script> 
+  <script>
+  var platform = new H.service.Platform({
+    apikey: "z6rVlgCg62beX3jcCuVxjsJFgLi-8DnC_kWqdztPU2w"
+  });
+  var defaultLayers = platform.createDefaultLayers();
+  var mapContainer = document.getElementById("map");
+// Instantiate a map object
+
+// center should be current latitude and longitude
+  var map = new H.Map(mapContainer, defaultLayers.raster.normal.map, {
+    zoom: 14,
+    center: {
+      lat: 19.08358,
+      lng: 72.910697
+    },
+    pixelRatio: window.devicePixelRatio || 1
+  });
+
+function startClustering(map, events, ui) {
+  var dataPoints = events.map(function (item) {
+    return new H.clustering.DataPoint(item.latitude, item.longitude, null, item);
+  });
+
+  var clusteredDataProvider = new H.clustering.Provider(dataPoints, {
+    clusteringOptions: {
+      // Maximum radius of the neighbourhood
+      eps: 32,
+      // minimum weight of points required to form a cluster
+      minWeight: 3
+    },
+    theme: CUSTOM_THEME
+  });
+
+  clusteredDataProvider.addEventListener('tap', onMarkerClick);
+
+  var clusteringLayer = new H.map.layer.ObjectLayer(clusteredDataProvider);
+  map.addLayer(clusteringLayer);
+}
+
+  var CUSTOM_THEME = {
+    getClusterPresentation: function(cluster) {
+      var randomDataPoint = getRandomDataPoint(cluster);
+      var data = randomDataPoint.getData();
+      
+      var icon_url = "http://cdn.onlinewebfonts.com/svg/img_537816.png";
+      switch(data.event) {
+        case 'fire': icon_url = "https://www.svgrepo.com/show/172374/fire-with-logs-cross.svg";
+                        break;
+        case 'explosion': icon_url = "https://www.svgrepo.com/show/79567/bomb.svg";
+                        break;
+        case 'curfew': icon_url = "https://cdn.iconscout.com/icon/premium/png-512-thumb/angry-crowd-1649497-1399702.png";
+                        break;
+        case 'natural': icon_url = "https://www.svgrepo.com/show/59214/tsunami-insurance-symbol-of-a-home-and-a-big-ocean-wave.svg";
+                        break;
+        case 'accident': icon_url = "https://www.svgrepo.com/show/4487/accident.svg"
+                        break;
+        default: icon_url = "http://cdn.onlinewebfonts.com/svg/img_537816.png";
+      }
+      
+      var clusterMarker = new H.map.Marker(cluster.getPosition(), {
+      icon: new H.map.Icon(icon_url, {
+        size: {w: 50, h: 50},
+        anchor: {x: 25, y: 25}
+      }),
+      min: cluster.getMinZoom(),
+      max: cluster.getMaxZoom()
+    });
+
+    clusterMarker.setData(data);
+    return clusterMarker;
+    },
+    getNoisePresentation: function(noisePoint) {
+      var data = noisePoint.getData();
+      
+      var icon_url = "http://cdn.onlinewebfonts.com/svg/img_537816.png";
+      console.log(data);
+      switch(data.type) {
+        case 'fire': icon_url = "/images/fire.svg";
+                        break;
+        case 'explosion': icon_url = "/images/bomb.svg";
+                        break;
+        case 'curfew': icon_url = "/images/curfew.png";
+                        break;
+        case 'natural': icon_url = "/images/natural.svg";
+                        break;
+        case 'accident': icon_url = "/images/accident.svg"
+                        break;
+        default: icon_url = "http://cdn.onlinewebfonts.com/svg/img_537816.png";
+      }
+
+      var noiseMarker = new H.map.Marker(noisePoint.getPosition(), {
+        min: noisePoint.getMinZoom(),
+        icon: new H.map.Icon(icon_url, {
+          size: {w: 30, h: 30},
+          anchor: {x: 20, y: 20}
+        })
+      });
+      noiseMarker.setData(data);
+      return noiseMarker
+    }
+  };
+
+  function getRandomDataPoint(cluster) {
+  var dataPoints = [];
+
+    // Iterate through all points which fall into the cluster and store references to them
+    cluster.forEachDataPoint(dataPoints.push.bind(dataPoints));
+
+    // Randomly pick an index from [0, dataPoints.length) range
+    // Note how we use bitwise OR ("|") operator for that instead of Math.floor
+    return dataPoints[Math.random() * dataPoints.length | 0];
+  }
+
+  function getBubbleContent(data) {
+    var media_string = "";
+    if(data.media) {
+      if(["jpg","gif","jpeg","png"].includes(data.media.ext))
+        media_string = `<img src="${data.media.dest}" width="100%"></img>`;
+      else if(["mp4","webm","wav","ogg"].includes(data.media.ext))
+        media_string = `<video width="100%" controls autoplay><source src="${data.media.dest}"></video>`;
+    }
+
+    return `<div style="width: 125px; height: 150px; overflow: scroll;"><b style="color: red;">Type</b>: ${data.type}<br><b style="color: red;">Radius</b>: ${data.radius}<br><b style="color: red;">Description</b>: ${data.description}<br><b style="color: red;">Reported by</b>: ${data.user.username}<br><b style="color: red;">Time</b>: ${new Date(data.time)}<br>${media_string}</div>`;
+  }
+
+  function onMarkerClick(e) {
+    var position = e.target.getGeometry(),
+    data = e.target.getData(),
+    bubbleContent = getBubbleContent(data);
+    bubble = onMarkerClick.bubble;
+
+  if (!bubble) {
+    bubble = new H.ui.InfoBubble(position, {
+      content: bubbleContent
+    });
+    ui.addBubble(bubble);
+    onMarkerClick.bubble = bubble;
+  } else {
+    bubble.setPosition(position);
+    bubble.setContent(bubbleContent);
+    bubble.open();
+  }
+  map.setCenter(position, true);
+}
+
+  var mapEvent = new H.mapevents.MapEvents(map);
+  var mapBehaviour = new H.mapevents.Behavior(mapEvent);
+  var ui = H.ui.UI.createDefault(map, defaultLayers);
+  var events = JSON.parse('<%- JSON.stringify(events) %>');
+  startClustering(map, events, ui);
+
+  </script>
+</html>

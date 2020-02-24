@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <%- include('../head') -%>
+  <link rel="stylesheet" type="text/css" href="/stylesheets/moment.css">
+  <body ng-app="">
+    <%- include('../navbar') -%>
+    <br>
+    <div id="mainPage">
+      <%- include('../sidebar') -%>
+      <div class="column col-xs-12 col-sm-9 col-lg-10" style="margin:auto" id="main">
+        <input type="text" class="form-control" onkeyup="updateList(this.value);" placeholder="Search here..." />
+        <br>
+        <ul class="list-group">
+          <li class="list-group-item list-group-item-primary">Total Users</li>
+            <li class="list-group-item">
+              Total <b><%= list.length %></b> user(s) have signed up.
+            </li>
+        </ul>
+        <ul class="list-group">
+          <li class="list-group-item list-group-item-primary">Results</li>
+          <div id="user-list">
+            <% for(var i=0;i<list.length;i++) { %>
+              <li class="list-group-item">
+                  <img src="<%= list[i].profile_pic %>" class="logo">
+                  <b><a href="/u/<%= list[i].username %>" id="list-username"><%= list[i].username %></a></b>
+              </li>
+            <% } %>
+          </div>
+        </ul>
+      </div>
+    </div>
+  
+    <div id="notify_message" class=" notify_message-success">
+    	<center>Search for people on auxilium...</center>
+    </div>
+    <%- include('../tabs') -%>
+    <%- include('../footer') -%>
+  </body>
+   <script type="text/javascript" src="/javascripts/search.js"></script>
+   <script>
+    var activeItem = document.getElementById("search");
+    activeItem.style.backgroundColor = "rgba(233,235,238,0.25)";
+  </script>
+</html>
