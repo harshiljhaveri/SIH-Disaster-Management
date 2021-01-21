@@ -37,7 +37,7 @@
     "prompts": "^2.2.1",
     "pusher": "^3.0.0",
     "request": "2.88.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "time-ago": "0.2.1",
     "usage": "^0.7.1",
     "web-push": "^3.4.3"
